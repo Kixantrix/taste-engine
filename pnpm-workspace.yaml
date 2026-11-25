@@ -1,4 +1,5 @@
 packages:
   - "apps/*"
+  - "apps/taste-engine/web"
 allowBuilds:
   esbuild: true

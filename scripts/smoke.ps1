@@ -170,6 +170,46 @@ if ($runDashboardSmoke -ne '1') {
 }
 Write-Output ""
 
+# --- Check 6: Optional taste-engine endpoints ---
+Write-Output "[ Taste Engine ]"
+if ([string]::IsNullOrWhiteSpace($env:TASTE_SMOKE_BASE_URL)) {
+    Write-Pass "taste-engine smoke skipped (set TASTE_SMOKE_BASE_URL to enable)"
+} else {
+    $baseUrl = $env:TASTE_SMOKE_BASE_URL.TrimEnd('/')
+    foreach ($endpoint in @(
+        @{ Path = '/healthz'; Name = 'healthz' },
+        @{ Path = '/readyz'; Name = 'readyz' },
+        @{ Path = '/v1/openapi.json'; Name = 'openapi.json' }
+    )) {
+        try {
+            $response = Invoke-RestMethod -Uri "$baseUrl$($endpoint.Path)" -Method Get
+            $valid = if ($endpoint.Path -eq '/v1/openapi.json') {
+                $response.info.title -eq 'Taste Engine'
+            } else {
+                $response.status -eq 'ok'
+            }
+            if ($valid) {
+                Write-Pass "taste-engine $($endpoint.Path)"
+            } else {
+                Write-Fail "taste-engine $($endpoint.Path) returned an unexpected response"
+            }
+        } catch {
+            Write-Fail "taste-engine $($endpoint.Path) request failed"
+        }
+    }
+    try {
+        $shell = Invoke-WebRequest -Uri "$baseUrl/" -Method Get
+        if ($shell.Content -match '<title>Taste Engine</title>' -and $shell.Content -match 'Discover') {
+            Write-Pass "taste-engine Discover shell"
+        } else {
+            Write-Fail "taste-engine Discover shell returned unexpected content"
+        }
+    } catch {
+        Write-Fail "taste-engine Discover shell request failed"
+    }
+}
+Write-Output ""
+
 # --- Summary ---
 $total = $pass + $fail
 Write-Output "=== Results: $pass/$total passed ==="

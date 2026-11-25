@@ -4,6 +4,7 @@
 # Python
 __pycache__/
 *.pyc
+*.egg-info/
 .venv/
 venv/
 .coverage
@@ -26,6 +27,7 @@ apps/kerrigan-dashboard/node_modules/
 # Secrets
 .env
 .env.*
+!apps/taste-engine/.env.example
 
 # Agent audit logs (optional, can be committed if desired)
 tools/.audit/

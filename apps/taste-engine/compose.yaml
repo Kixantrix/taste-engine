@@ -1,0 +1,83 @@
+x-app-environment: &app-environment
+  DATABASE_URL: "${DATABASE_URL:-postgresql+psycopg://postgres:5432/taste_engine}"
+  PGUSER: "${PGUSER:-taste_engine}"
+  PGPASSWORD: "${PGPASSWORD:-local-dev-password}"
+  AUTH_MODE: "${AUTH_MODE:-passphrase}"
+  PUBLIC_BASE_URL: "${PUBLIC_BASE_URL:-http://localhost:8000}"
+  CLOUD_AI_CONSENT: "${CLOUD_AI_CONSENT:-false}"
+  LLM_BASE_URL: "${LLM_BASE_URL:-}"
+  STT_URL: "${STT_URL:-}"
+  AVAILABILITY_PROVIDER: "${AVAILABILITY_PROVIDER:-none}"
+  AVAILABILITY_API_KEY: "${AVAILABILITY_API_KEY:-}"
+  CATALOG_USER_AGENT: "${CATALOG_USER_AGENT:-taste-engine/0.1 (self-hosted)}"
+  REGION: "${REGION:-US}"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: "${POSTGRES_DB:-taste_engine}"
+      POSTGRES_USER: "${POSTGRES_USER:-taste_engine}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-local-dev-password}"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U taste_engine -d taste_engine"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  migrate:
+    build:
+      context: ../..
+      dockerfile: apps/taste-engine/Dockerfile
+    environment: *app-environment
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    build:
+      context: ../..
+      dockerfile: apps/taste-engine/Dockerfile
+    environment: *app-environment
+    command: ["uvicorn", "taste_engine.app:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "8000:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=2)"
+      interval: 30s
+      timeout: 3s
+      start_period: 10s
+      retries: 3
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: ../..
+      dockerfile: apps/taste-engine/Dockerfile
+    environment: *app-environment
+    command: ["python", "-m", "taste_engine.worker"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os; os.kill(1, 0)"]
+      interval: 30s
+      timeout: 3s
+      start_period: 5s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
