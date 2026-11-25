@@ -12,7 +12,8 @@
   ],
   "strict_status_checks": false,
   "merge_queue": {
-    "enabled": true,
+    "enabled": false,
+    "_note": "Disabled: merge_queue rules are rejected (HTTP 422) on user-owned repositories; merge queue requires an organization-owned repo. Required status checks + PR review-thread resolution + Copilot review still gate main. Flip to true if the repo moves to an organization.",
     "merge_method": "SQUASH",
     "min_entries_to_merge": 1,
     "max_entries_to_merge": 5,
