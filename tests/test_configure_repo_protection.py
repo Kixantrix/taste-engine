@@ -21,7 +21,12 @@ def test_repo_protection_config_is_valid_and_declares_queue() -> None:
     assert config["branch"] == "main"
     assert config["protection_mode"] == "ruleset"
     assert config["strict_status_checks"] is False
-    assert config["merge_queue"]["enabled"] is True
+    mq = config["merge_queue"]
+    assert isinstance(mq["enabled"], bool)
+    # Merge queue may be intentionally disabled: ruleset merge queues are
+    # rejected on user-owned repos. A disable must be documented.
+    if mq["enabled"] is False:
+        assert mq.get("_note"), "disabled merge_queue must carry a _note explaining why"
     for check in ("kerrigan check", "tests", "smoke", "check-attestation"):
         assert check in config["required_checks"]
 
