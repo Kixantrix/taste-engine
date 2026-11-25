@@ -8,7 +8,7 @@ the DISC-06 deploy spike.
 **Local / plain Docker**
 
 ```bash
-cp apps/taste-engine/.env.example .env   # set TMDB_API_KEY, AVAILABILITY_API_KEY, HOUSEHOLD_PASSPHRASE
+cp apps/taste-engine/.env.example .env   # set AVAILABILITY_API_KEY, HOUSEHOLD_PASSPHRASE
 docker compose -f apps/taste-engine/compose.yaml up -d
 SMOKE_BASE_URL=http://localhost:8000 scripts/smoke.sh
 ```
@@ -38,7 +38,7 @@ SMOKE_BASE_URL=$(azd env get-value API_URL) scripts/smoke.sh
 - **Health:** `/healthz` reports liveness. `/readyz` checks the database, the migration version
   and that the STT endpoint is reachable when configured.
 - **Jobs:**
-  - Catalog refresh runs nightly. Cache TTL is under 6 months (TMDB terms).
+  - Catalog refresh runs nightly. It pulls from Wikidata (SPARQL, rate-limited, with a descriptive User-Agent) and TVmaze.
   - Availability refresh runs on demand and nightly for watchlisted titles, within vendor quota.
 - **Quotas:** the vendor quota counter is surfaced at `/v1/admin/status`. The app degrades to
   cached offers when the quota is exhausted.
@@ -65,7 +65,7 @@ SMOKE_BASE_URL=$(azd env get-value API_URL) scripts/smoke.sh
 
 ## Secrets & access
 
-- **Secrets:** `TMDB_API_KEY`, `AVAILABILITY_API_KEY`, `HOUSEHOLD_PASSPHRASE` or `OIDC_*`, and
+- **Secrets:** `AVAILABILITY_API_KEY`, `HOUSEHOLD_PASSPHRASE` or `OIDC_*`, and
   `DATABASE_URL`.
   - Coolify keeps them in env variables.
   - Azure keeps them in Key Vault, accessed via managed identity.

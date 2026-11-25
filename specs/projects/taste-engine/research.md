@@ -10,13 +10,13 @@ Brief: [`docs/dossier.md`](../../../docs/dossier.md).
 | ID | Question | Answered by | Status |
 |---|---|---|---|
 | RQ-1 | Which existing project, if any, should be the shell? | §Upstream, DISC-01 | Desk answer: thin new shell |
-| RQ-2 | Which licensed data source gives US availability and web launch links? | §Data, DISC-04 | Desk answer: TMDB + MotN, with a legal caveat |
+| RQ-2 | Which licensed data source gives US availability and web launch links? | §Data, DISC-04 | Open metadata (Wikidata/TVmaze/Wikipedia) + MotN availability; confirm in DISC-04 |
 | RQ-3 | Do provider web links land on the title page? | DISC-03 matrix | Open; needs hands-on testing |
 | RQ-4 | How do we deploy the same images to Coolify and Azure? | §Deployment, OPS-01/02 | Desk answer below |
 | RQ-5 | How do we capture voice privately in a browser? | §Voice, UX-01 spike | Desk answer below |
 | RQ-6 | Which history exports are realistically available, and how good is their signal? | §Import, CORE-01 | Desk answer below |
 | RQ-7 | Can a personal ranker beat simple baselines on household data? | ML-01/ML-02 | Open; needs data |
-| RQ-8 | Do TMDB terms allow an ML ranker built on TMDB data? | DISC-02, D1 | **Open, blocking** |
+| RQ-8 | Do TMDB terms allow an ML ranker built on TMDB data? | DISC-02, D1 | **Decided 2026-11-24 (D1): no TMDB** |
 
 ## Upstream (RQ-1)
 
@@ -54,24 +54,28 @@ history. DISC-01 must confirm all of this at pinned commits.
   - App/episode deep links appear to be Startup tier and above ($349/mo).
   - It is our backup source.
 - **JustWatch:** no public API. Don't scrape it.
-- **Trakt / Simkl:** history and ID crosswalk via OAuth. No deep links *(unverified)*.
+- **Trakt / Simkl:** history and ID crosswalk via OAuth. No deep links *(unverified)*. Trakt metadata is TMDB-sourced, so we use its IDs only.
 - **Wikidata** (e.g. Netflix ID P1874): only for patchy ID backfill.
 - **Launch-link policy**
   - Treat provider URLs as **opaque values supplied by the availability API**, never as patterns we construct ourselves.
-  - Fallback chain: deep link → provider search URL → TMDB `/watch` page.
+  - Fallback chain: deep link → provider search URL → provider home page.
   - Log broken links with a last-tested date.
 
-**Candidate MVP data stack, pending D1:**
-- TMDB for metadata.
-- MotN for availability and deep links.
-- Our own attribute "genome", derived from data whose license allows ML use.
+**MVP data stack (D1 decided: fully open, no TMDB):**
+- **Wikidata (CC0)** provides entities, IDs and structured features.
+- **TVmaze (CC BY-SA)** provides TV seasons and episodes.
+- **Wikipedia (CC BY-SA)** provides overviews and the text used to derive genome attributes.
+- **MotN** provides availability and deep links.
+- Our own attribute "genome" comes only from these sources plus user evidence.
 
-**Options for D1** if TMDB's AI clause applies:
-- (a) Ask TMDB for written clarification or a license.
-- (b) Use TMDB only for display, and derive ranking features from openly licensed sources: Wikidata (CC0), MovieLens Tag Genome (research license, so check its terms), user-generated evidence, and the vendor's genre fields.
-- (c) Use a commercial metadata vendor.
+Options considered for D1:
+- (a) Ask TMDB for clarification.
+- (b) Hybrid, using TMDB for display only.
+- (c) Use a commercial vendor.
+- **Chosen: fully open.** Tradeoff: poster imagery and overviews are weaker, and very new or obscure titles have thinner coverage.
+- Imagery uses availability-vendor images only where their terms allow. Otherwise it falls back to text cards.
 
-### Metadata alternatives to TMDB (for ML features)
+### Open metadata sources (replacing TMDB)
 
 | Source | License / terms | Coverage | Use for |
 |---|---|---|---|
@@ -84,19 +88,19 @@ history. DISC-01 must confirm all of this at pinned commits.
 | User evidence | Ours | Household | Strongest personal signal (reactions, ratings, imports). |
 | Commercial vendors (Gracenote, TheTVDB licensed) | Paid | Comprehensive | Only if D2 changes to commercial. |
 
-**Proposed split if D1 is restrictive:**
-- TMDB (or Wikidata/TVmaze) provides **display** data: posters, overview and search.
-- **Ranking features** come only from Wikidata, TVmaze, Wikipedia-derived attributes and user evidence.
-- The `genome` module records the source of every feature. Swapping a source should not require re-collecting user evidence.
+**Design rule:**
+- Every catalog field and genome feature records its source and license.
+- Swapping a source must not require re-collecting user evidence.
+- Wikimedia API etiquette applies: a descriptive User-Agent, rate limits, and bulk work against dumps rather than live SPARQL.
 
 ## Import (RQ-6)
 
 - **Netflix**
   - Per-profile "Viewing activity" CSV: Title and Date only, no ratings. Episode rows look like `Show: Season N: Episode`.
   - Full account data export: `ViewingActivity.csv` with profile, start time, duration and device. It can take up to 30 days.
-  - Low signal. Titles need fuzzy matching.
+  - Low signal. Titles need fuzzy matching against Wikidata/TVmaze labels, using the Netflix ID (P1874) where available.
 - **Letterboxd** ZIP: `watched.csv`, `ratings.csv` and `diary.csv` *(unverified columns)*. A strong signal for movies.
-- **IMDb** ratings CSV: `Const` (IMDb ID), `Your Rating` and `Date Rated` *(unverified)*. Maps exactly via TMDB `/find`.
+- **IMDb** ratings CSV: `Const` (IMDb ID), `Your Rating` and `Date Rated` *(unverified)*. Maps exactly via Wikidata IMDb ID (P345).
 - **Trakt:** OAuth API or export. Best for TV.
 - **Parsing:** parse on the household server (or in the browser), then discard the raw file once events are written.
 
@@ -140,8 +144,8 @@ history. DISC-01 must confirm all of this at pinned commits.
 
 | ID | Decision | Recommendation | Who |
 |---|---|---|---|
-| D1 | How do we handle the TMDB ML/AI clause? | Email TMDB for clarification now. Meanwhile keep ranking features separable from TMDB fields (option b). | Human |
-| D2 | Will this ever be commercial or multi-household hosted? | No for the MVP. This keeps the TMDB, Watchmode and MotN free tiers viable. | Human |
+| D1 | How do we handle the TMDB ML/AI clause? | **Decided 2026-11-24:** drop TMDB. Use Wikidata, TVmaze and Wikipedia for all metadata. | Human ✅ |
+| D2 | Will this ever be commercial or multi-household hosted? | No for the MVP. This keeps the Watchmode and MotN free tiers viable. | Human |
 | D3 | Availability vendor | MotN free tier first, Watchmode as backup. Confirm in DISC-04. | DISC-04 |
 | D4 | Shell | Thin new shell, with PenguWatch integration as the first adapter. | DISC-01 |
 | D5 | Azure role | Managed reference deployment. Coolify is the self-host target. | Human (confirm) |

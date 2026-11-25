@@ -26,7 +26,7 @@ Test paths are proposals; the owning task creates them.
 ## AC-05: Legitimate launch handoff
 
 - [ ] **Given** a title with a vendor offer **When** the user clicks *Watch on X* **Then** a new tab opens to the vendor-supplied provider URL with `noopener`, and an exposure event is logged (UX-02 · e2e · cloud-linux · `web/tests/e2e/launch.spec.ts`)
-- [ ] **Given** an offer without a deep link **When** the user launches it **Then** the fallback chain is used (provider search, then the TMDB watch page) (AV-01 · unit · cloud-linux · `tests/unit/test_launch_fallback.py`)
+- [ ] **Given** an offer without a deep link **When** the user launches it **Then** the fallback chain is used (provider search URL, then provider home page) (AV-01 · unit · cloud-linux · `tests/unit/test_launch_fallback.py`)
 - [ ] **Given** the provider matrix **When** DISC-03 is re-run **Then** the results are recorded with last-tested dates (DISC-03 · scenario · manual-human · `research/disc-03-launch-matrix.md`)
 
 ## AC-06: Reviewable feedback changes ranking

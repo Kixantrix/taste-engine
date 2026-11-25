@@ -11,8 +11,8 @@ D1–D5.
 
 - DISC-01: deploy PenguWatch, Sofa and Findarr at pinned commits on a local or Coolify host.
   Record imports, APIs, UI notes and security posture. Decide D4.
-- DISC-02: review licenses and data terms (TMDB §1.C AI clause, MotN, Watchmode, MovieLens).
-  Draft the TMDB clarification email. Feeds D1/D2.
+- DISC-02: review licenses and data terms (MotN, Watchmode, Wikidata/TVmaze/Wikipedia
+  attribution, IMDb datasets, MovieLens). Also check vendor imagery rights. Feeds D2/D3.
 - DISC-03: build a provider web-launch matrix covering Netflix, Prime, Disney+, Max, Hulu,
   Apple TV+, Paramount+ and Peacock. Test each in Chrome, Safari and Firefox, logged in and
   logged out, and record the fallback behaviour.
@@ -40,7 +40,7 @@ is written yet, apart from the spike throwaways in `examples/` or a scratch bran
 
 ## Milestone 2 — Taste baseline, discover & launch (first vertical slice)
 
-- CAT-01: add the TMDB catalog adapter, cache, attribution and ID crosswalk.
+- CAT-01: add the open catalog adapter (Wikidata + TVmaze + Wikipedia), ID crosswalk and attribution.
 - AV-01: add the availability adapter for the vendor chosen in D3, plus the launch fallback
   chain and link-health log.
 - ML-01: build the evaluation harness (temporal split) with Baseline A and Baseline B.

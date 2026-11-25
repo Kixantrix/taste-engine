@@ -20,7 +20,7 @@ All figures are desk estimates from Nov 2026 and still need verification.
 | Registry | GHCR: $0 | GHCR: $0 (ACR Basic ~$5 if preferred) |
 | Logs / Key Vault / DNS | $0 | ~$2–5 (with Log Analytics capped) |
 | STT | Household CPU: $0 | Opt-in Azure AI Speech, usage-based (small); or self-host |
-| Data APIs | TMDB free; MotN free (100 req/day); Watchmode free (2,500/mo) | Same |
+| Data APIs | Wikidata/TVmaze/Wikipedia free; MotN free (100 req/day); Watchmode free (2,500/mo) | Same |
 | **Total** | **≈ $0 marginal** | **≈ $20–30 / month** |
 
 Paid availability tiers (Watchmode Startup at $349/mo) are **out of budget** for the MVP. Needing
@@ -44,5 +44,5 @@ one would trigger decision D2/D3.
 
 - 1 household, 2–5 viewers, fewer than 10 concurrent requests.
 - A catalog cache of about 20–50k titles. Postgres stays under 2 GB.
-- Multi-household or commercial use is **not** assumed. That would change data licensing (TMDB
-  commercial terms, paid vendor tiers) before it changes infrastructure.
+- Multi-household or commercial use is **not** assumed. That would change data licensing (paid
+  availability-vendor tiers) before it changes infrastructure.

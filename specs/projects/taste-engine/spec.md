@@ -20,9 +20,11 @@ MVP (browser, single household, US availability):
 - Household with separate viewer identities; simple authentication that works on both hosts.
 - History import: Letterboxd CSV, IMDb ratings CSV, Netflix `ViewingActivity.csv`, Trakt
   export (JSON); manual "watched / rate" actions. Idempotent re-import.
-- Catalog: TMDB metadata adapter with local cache and required attribution.
+- Catalog: **open-licensed metadata only** (decision D1): Wikidata (CC0) for entities and ID
+  crosswalk, TVmaze (CC BY-SA) for TV seasons and episodes, Wikipedia (CC BY-SA) for overviews
+  and genome derivation. Includes a local cache and attribution. No TMDB.
 - Availability: one authorized availability source (see `research.md` §Data) resolving
-  providers and web launch URLs; graceful fallback to provider search / TMDB watch page.
+  providers and web launch URLs; graceful fallback to provider search or home page.
 - Append-only, versioned evidence event store (viewing, feedback, corrections) with JSON
   export, restore and genuine deletion.
 - Taste baseline: popularity/genre baseline + embedding similarity baseline + first
@@ -66,7 +68,7 @@ MVP (browser, single household, US availability):
   OpenAI / Azure AI Speech) is an opt-in adapter, off by default, behind explicit consent.
 - Portability: OCI images + 12-factor env config; no host-specific SDKs in the core; storage
   and auth behind adapters.
-- Data licensing: respect TMDB / availability-vendor terms (attribution, caching windows,
+- Data licensing: respect open-data licenses (CC BY-SA attribution) and availability-vendor terms (caching windows,
   non-commercial limits). No unlicensed scraping.
 - Upstream-first: prefer integrating/contributing to existing projects where it fits (see
   `research.md` §Upstream).
@@ -97,7 +99,7 @@ Summary of the first vertical slice (M2 exit):
 | Availability data cost/terms | Vendor comparison spike (DISC-04) before committing; adapter interface; cache per contract. |
 | Provider web links unstable | Link-compatibility matrix with last-tested dates; fallback chain. |
 | SQLite on network file shares (Azure Files/SMB) | Postgres on every hosted target; SQLite only for dev/tests. See `architecture.md`. |
-| TMDB terms restrict ML/AI use of TMDB content | Decision D1 in `research.md`; keep ranking features separable from TMDB fields; seek written clarification. |
+| Open metadata is thinner than TMDB (posters, obscure/new titles) | Decision D1 accepts this; use vendor-supplied imagery only if its terms allow, otherwise text cards; track catalog-coverage metric. |
 | Browser speech APIs leak audio to vendor clouds | Do not use Web Speech API by default; MediaRecorder → self-hosted faster-whisper. |
 | Taste model adds no value over baselines | Baselines A/B shipped first; benchmark gates (dossier §5.5). |
 | Upstream projects unsuitable/unmaintained | M0 audit decides shell vs thin new app; adapters keep us decoupled. |

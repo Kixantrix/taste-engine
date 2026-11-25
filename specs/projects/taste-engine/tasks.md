@@ -12,9 +12,9 @@ Each task ends with green CI and has explicit "done" criteria. The Routing colum
   - Links: research.md §Upstream; dossier §3
   - Routing: R-local.human-judgment (hands-on UX evaluation with household data)
 - [ ] Task: DISC-02 License & data-terms review
-  - Done when: an SPDX table for the candidates is written; the TMDB, MotN, Watchmode and
-    MovieLens terms are summarized with the clauses quoted; a TMDB clarification email is drafted;
-    and D1/D2 options are written up for the human to decide.
+  - Done when: an SPDX table for the candidates is written; the MotN, Watchmode, IMDb-dataset and
+    MovieLens terms (caching, ML use, imagery) are summarized with the clauses quoted; the open-data
+    attribution requirements are listed; and D2/D3 inputs are written up.
   - Links: research.md §Data, D1, D2
   - Routing: R-cloud-default
 - [ ] Task: DISC-03 Provider web-launch matrix
@@ -73,9 +73,11 @@ Each task ends with green CI and has explicit "done" criteria. The Routing colum
 
 ## Milestone 2 — Taste baseline, discover & launch
 
-- [ ] Task: CAT-01 TMDB catalog adapter
-  - Done when: the adapter has a cache TTL of at most 6 months, the `/find` IMDb crosswalk and an
-    attribution component, and its contract tests use recorded fixtures.
+- [ ] Task: CAT-01 Open catalog adapter
+  - Done when: the Wikidata SPARQL adapter (films/series, IDs, genres, cast) is built; TVmaze
+    provides seasons and episodes; Wikipedia provides overview extracts; every field stores
+    source and license; there is an attribution footer; title matching resolves ≥90% of the
+    household fixture imports; and contract tests use recorded fixtures.
   - Dependencies: CORE-01, DISC-02
   - Routing: R-cloud-default
 - [ ] Task: AV-01 Availability adapter & launch chain

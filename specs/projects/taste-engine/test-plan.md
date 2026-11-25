@@ -9,7 +9,7 @@ environment are chosen separately for each AC.
   planner fixtures, ranking math, and React components.
 - **Integration (pytest + Postgres service container):**
   - API routes against a real Postgres.
-  - External vendors (TMDB, MotN, STT, LLM) replaced with recorded fixtures (`respx`/VCR-style).
+  - External vendors (Wikidata, TVmaze, MotN, STT, LLM) replaced with recorded fixtures (`respx`/VCR-style).
     No live API calls in CI.
 - **Offline ML evaluation (pytest marker `eval`):**
   - Runs the temporal-split benchmark on committed fixtures.

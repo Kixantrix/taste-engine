@@ -27,7 +27,7 @@ flowchart LR
     W --> PG
     API -- audio, transient --> STT[taste-stt<br/>faster-whisper]
     API -- transcript --> LLM[OpenAI-compatible LLM<br/>local or opt-in cloud]
-    W --> TMDB[TMDB metadata]
+    W --> OPEN[Open metadata<br/>Wikidata · TVmaze · Wikipedia]
     W --> AV[Availability vendor<br/>MotN / Watchmode]
     PWA -. opens new tab .-> P[Provider website]
 ```
@@ -40,7 +40,7 @@ Python packages under `apps/taste-engine/` (layout proposed; finalized in T-SCAF
 |---|---|---|
 | `events` | Append-only evidence store: viewing, feedback, observations, corrections, deletions. Versioned schemas. | `POST /v1/events`, `POST /v1/feedback`, `POST /v1/feedback/{id}/corrections` |
 | `importers` | Letterboxd, IMDb, Netflix and Trakt parsers that produce canonical events. Idempotency key = hash(source, row identity). | `POST /v1/imports` (multipart) → job id |
-| `catalog` | TMDB adapter with a cache TTL under 6 months, ID crosswalk (`tmdb:`, `imdb:`) and attribution metadata. | Internal `CatalogProvider` protocol |
+| `catalog` | Open-data catalog: Wikidata (CC0) entities and ID crosswalk (`wd:`, `imdb:`, `letterboxd:`, `netflix:`, `tvmaze:`), TVmaze (CC BY-SA) seasons and episodes, Wikipedia (CC BY-SA) overviews. Per-field license and source, and an attribution footer. No TMDB (decision D1). | Internal `CatalogProvider` protocol |
 | `availability` | Vendor adapter (MotN first) giving US offers plus **opaque** launch URLs, the fallback chain, and a link-health log. | `GET /v1/titles/{id}/offers` |
 | `genome` | Interpretable attribute scores plus an embedding per title, with source, version and uncertainty recorded. Inputs are limited to licensed fields (D1). | Internal |
 | `taste` | Baseline A (popularity/genre), Baseline B (embedding similarity), and Personal v1 (regularized ordinal model). Produces explanations linked to evidence. | `POST /v1/recommendations`, `POST /v1/scores` |
@@ -51,7 +51,7 @@ Python packages under `apps/taste-engine/` (layout proposed; finalized in T-SCAF
 | `jobs` | Postgres-backed queue (`procrastinate` or `SKIP LOCKED`) for enrichment, imports and re-ranking. | Worker entrypoint |
 | `web` | React + Vite + TS PWA. Covers Discover, Title, Mic/Review, Profile, Subscriptions and Plan. | Consumes `/v1` OpenAPI-generated client |
 
-**Configuration (12-factor env):** `DATABASE_URL`, `AUTH_MODE`, `OIDC_*`, `TMDB_API_KEY`,
+**Configuration (12-factor env):** `DATABASE_URL`, `AUTH_MODE`, `OIDC_*`, `CATALOG_USER_AGENT` (Wikimedia etiquette),
 `AVAILABILITY_PROVIDER`, `AVAILABILITY_API_KEY`, `STT_URL`, `LLM_BASE_URL`, `LLM_MODEL`,
 `CLOUD_AI_CONSENT` (default `false`), `PUBLIC_BASE_URL`, `REGION=US`.
 
@@ -101,5 +101,5 @@ only Coolify needs (`SERVICE_FQDN_*`) are harmless to plain Compose.
 - **Auth:** all `/v1` routes are household-scoped. Passphrase mode uses argon2 and rate limiting. OIDC validates issuer and audience. The app trusts `X-Forwarded-*` only from configured proxy ranges.
 - **Viewer attribution:** feedback always carries an explicit viewer id selected in the UI and is never inferred silently.
 - **Secrets:** Coolify environment / Key Vault, never in images or git. Provider tokens (e.g. Trakt OAuth) are excluded from exports.
-- **Third-party terms:** TMDB/JustWatch attribution is shown in the UI. Cache TTLs follow vendor terms. Under D1, TMDB fields must not be used as ML features until it is resolved.
+- **Third-party terms:** TVmaze and Wikipedia attribution (CC BY-SA) is shown in the UI. Wikidata is CC0. TMDB is not used (D1). Availability-vendor cache TTLs and any vendor-supplied imagery follow that vendor's contract.
 - **Exposure:** compose binds only through the proxy. No `0.0.0.0` host-port publishing in the Coolify profile (contrast PenguWatch's default).
