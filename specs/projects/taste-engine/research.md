@@ -36,9 +36,17 @@ Brief: [`docs/dossier.md`](../../../docs/dossier.md).
 API. The taste/ranking core is the product, and no candidate offers a pluggable ranker. After
 that, integrate **PenguWatch first**, pushing our scores in as a custom rating source and
 possibly reusing its planner instead of writing PLAN-01. Integrate **Sofa second** as a source of
-history. DISC-01 must confirm all of this at pinned commits.
+history. DISC-01 must confirm all of this at pinned commits. DISC-02's commit-level licenses and
+contribution review is in [`research/disc-02-licenses.md`](./research/disc-02-licenses.md).
 
 ## Data (RQ-2, RQ-8)
+
+DISC-02 verified the public license and API terms relevant to the data stack: MotN permits
+commercial availability use but prohibits using its payload to train, evaluate, or improve ML/AI;
+Watchmode's published free and paid plan limits differ; and CC BY-SA, IMDb, and MovieLens terms
+require source-specific handling. The full cited review, including items not stated in public
+terms, attribution placements, and the standalone Tag Genome gap, is in
+[`research/disc-02-licenses.md`](./research/disc-02-licenses.md).
 
 - **TMDB**
   - Metadata, images and ID crosswalk (`/find` by IMDb ID).
@@ -48,14 +56,13 @@ history. DISC-01 must confirm all of this at pinned commits.
 - **Streaming Availability API (Movie of the Night)** ([docs](https://docs.movieofthenight.com/))
   - Deep links per movie, show, season and episode, plus expiry dates and prices, across 65 countries.
   - The free tier allows 100 requests/day, so we must cache lookups per title on demand.
-  - We have not read the terms yet.
+  - Its [published terms](https://developers.movieofthenight.com/terms-and-conditions) allow local caching for functional needs and commercial consumer-facing apps, but prohibit using its data to train, fine-tune, evaluate or improve ML/AI systems. Attribution is required; third-party images are not licensed by the API provider. See [DISC-02](./research/disc-02-licenses.md).
 - **Watchmode** ([pricing](https://api.watchmode.com/pricing))
-  - The free tier gives 2,500 credits/month, is non-commercial, and requires a refresh within 30 days.
-  - App/episode deep links appear to be Startup tier and above ($349/mo).
-  - It is our backup source.
+  - The public plan page states that the free Developer tier is non-commercial, requires attribution, and says cached data should be refreshed or deleted within 30 days; paid plans state commercial use. Exact contract terms and plan-specific image/AI/redistribution rights need confirmation; see [DISC-02](./research/disc-02-licenses.md).
+  - It remains a candidate backup source; plan-specific deep-link availability and current prices must be checked against the live plan page before selection.
 - **JustWatch:** no public API. Don't scrape it.
-- **Trakt / Simkl:** history and ID crosswalk via OAuth. No deep links *(unverified)*. Trakt metadata is TMDB-sourced, so we use its IDs only.
-- **Wikidata** (e.g. Netflix ID P1874): only for patchy ID backfill.
+- **Trakt / Simkl:** history and ID crosswalk via OAuth. The previous blanket “no deep links” note is contradicted for Simkl: its [API documents a `/redirect` endpoint](https://api.simkl.org/guides/deep-linking) that sends an external title ID to the matching Simkl title page. Trakt launch-link behavior is not established here; use availability-vendor URLs for MVP launch. Trakt metadata is TMDB-sourced, so we use its IDs only.
+- **Wikidata** (e.g. Netflix ID P1874): only for patchy ID backfill. Structured data is CC0; images linked from Wikidata have separate file licenses.
 - **Launch-link policy**
   - Treat provider URLs as **opaque values supplied by the availability API**, never as patterns we construct ourselves.
   - Fallback chain: deep link → provider search URL → provider home page.
@@ -66,25 +73,28 @@ history. DISC-01 must confirm all of this at pinned commits.
 - **TVmaze (CC BY-SA)** provides TV seasons and episodes.
 - **Wikipedia (CC BY-SA)** provides overviews and the text used to derive genome attributes.
 - **MotN** provides availability and deep links.
-- Our own attribute "genome" comes only from these sources plus user evidence.
+- Our own attribute "genome" comes from Wikidata, TVmaze, Wikipedia text, and user evidence;
+  MotN availability payloads are not ranker inputs. Review CC BY-SA implications before using
+  Wikipedia-derived features.
 
 Options considered for D1:
 - (a) Ask TMDB for clarification.
 - (b) Hybrid, using TMDB for display only.
 - (c) Use a commercial vendor.
 - **Chosen: fully open.** Tradeoff: poster imagery and overviews are weaker, and very new or obscure titles have thinner coverage.
-- Imagery uses availability-vendor images only where their terms allow. Otherwise it falls back to text cards.
+- Imagery uses a vendor/file only where image rights are documented. MotN terms exclude third-party image rights and Watchmode's public image rights are not stated; otherwise use text cards.
 
 ### Open metadata sources (replacing TMDB)
 
 | Source | License / terms | Coverage | Use for |
 |---|---|---|---|
-| [Wikidata](https://www.wikidata.org/wiki/Wikidata:Licensing) | **CC0** structured data. Any use, no attribution needed. | Films and series. Genres, cast/crew, country, year, awards, based-on, IMDb/TMDB/Netflix IDs | Core ID crosswalk and structured features. Safest ML base. |
-| Wikipedia plot/reception text | CC BY-SA 4.0. Attribute it; derived numeric features are very likely fine *(confirm)*. | Most notable titles | LLM-derived genome attributes (tone, pacing, themes). |
-| [TVmaze API](https://www.tvmaze.com/api) | **CC BY-SA 4.0** data. Any use with credit and link. | TV only. Strong episode/season/schedule data and US network/web-channel info. | TV structure, episode cadence, season-readiness for the planner. |
-| IMDb non-commercial datasets | Personal and non-commercial use only. No redistribution. *(ML terms unverified)* | Very broad. Ratings and vote counts, basic genres. | Popularity and quality priors (Baseline A), if the terms allow. |
-| MovieLens 32M / Tag Genome | Research, non-commercial, no redistribution without permission | Movies, ≤2023 | Offline evaluation and attribute-vocabulary research only. Don't ship it. |
-| Availability vendor payloads (MotN / Watchmode) | Per vendor contract *(check ML/cache clauses in DISC-02)* | Titles they track | Genres, overview and ratings bundled with availability. |
+| [Wikidata](https://www.wikidata.org/wiki/Wikidata:Licensing) | **CC0** structured data. No attribution condition; linked media has separate licenses. | Films and series. Genres, cast/crew, country, year, awards, based-on, IMDb/TMDB/Netflix IDs | Core ID crosswalk and structured features. |
+| Wikipedia plot/reception text | CC BY-SA 4.0. Attribute and follow ShareAlike. Whether derived numeric features or model artifacts trigger ShareAlike is **not stated** in the reviewed terms; do not assume they are clear. | Most notable titles | Text and derived features require legal review before reuse; see [DISC-02](./research/disc-02-licenses.md). |
+| [TVmaze API](https://www.tvmaze.com/api) | **CC BY-SA** data. Any purpose with TVmaze credit/link and ShareAlike compliance. | TV only. Strong episode/season/schedule data and US network/web-channel info. | TV structure, episode cadence, season-readiness for the planner; review ShareAlike implications. |
+| IMDb non-commercial datasets | Personal and non-commercial use only; no repurposing into an online/offline title database except individual personal use. ML/AI use is **not stated**. | Very broad. Ratings and vote counts, basic genres. | Exclude from shared catalog and ranker absent permission; see [DISC-02](./research/disc-02-licenses.md). |
+| MovieLens 32M | Non-commercial/revenue restriction unless GroupLens permission; transformations may be redistributed only under the same conditions. | Movies, ratings, tags | Offline research/evaluation only under stated terms; do not use in a commercial product absent permission. |
+| Standalone Tag Genome | Terms **not stated** in accessible primary README content; do not infer from MovieLens 32M. | Movie-tag relevance scores | Do not use or redistribute until its own terms are reviewed; see [DISC-02](./research/disc-02-licenses.md). |
+| Availability vendor payloads (MotN / Watchmode) | MotN explicitly prohibits use to train, fine-tune, evaluate, or improve ML/AI; Watchmode's public sources do not state its ML/AI terms. Caching, attribution, imagery and redistribution differ by vendor; see [DISC-02](./research/disc-02-licenses.md). | Titles they track | Use availability data for the vendor-authorized availability function only; do not treat bundled genres, text, ratings, or images as cleared ranker inputs. |
 | User evidence | Ours | Household | Strongest personal signal (reactions, ratings, imports). |
 | Commercial vendors (Gracenote, TheTVDB licensed) | Paid | Comprehensive | Only if D2 changes to commercial. |
 
