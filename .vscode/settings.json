@@ -1,0 +1,103 @@
+{
+    // Keep the agent on "Default Approvals"; never silently jump to Bypass/Autopilot.
+    "chat.permissions.default": "Default Approvals",
+
+    "chat.tools.terminal.autoApprove": {
+        // ──────────────────────────────────────────────────────────────────
+        // Tier 1: trusted, reviewed kerrigan tools. These wrap the multi-step
+        // gh/git/python flows, so the safe path is ALWAYS a named script.
+        // Raw gh/python mutations are intentionally NOT allowlisted below —
+        // divergence from a common script falls through to manual approval.
+        // ──────────────────────────────────────────────────────────────────
+        "/pr-driver\\.ps1/":          { "approve": true, "matchCommandLine": true },
+        "/pr-watch\\.ps1/":           { "approve": true, "matchCommandLine": true },
+        "/pr-doctor\\.ps1/":          { "approve": true, "matchCommandLine": true },
+        "/pr-promote\\.ps1/":         { "approve": true, "matchCommandLine": true },
+        "/pr-rerun-pending\\.ps1/":   { "approve": true, "matchCommandLine": true },
+        "/pr-resolve-threads\\.ps1/": { "approve": true, "matchCommandLine": true },
+        "/pr-redispatch\\.ps1/":      { "approve": true, "matchCommandLine": true },
+        "/pr_reply_resolve\\.py/":    { "approve": true, "matchCommandLine": true },
+        "/new-issue\\.ps1/":          { "approve": true, "matchCommandLine": true },
+        "/new-pr\\.ps1/":             { "approve": true, "matchCommandLine": true },
+        "/create_issues\\.py/":       { "approve": true, "matchCommandLine": true },
+        "/clean-build\\.ps1/":        { "approve": true, "matchCommandLine": true },
+        "/sync-main\\.ps1/":          { "approve": true, "matchCommandLine": true },
+        "/dashboard-dev\\.ps1/":      { "approve": true, "matchCommandLine": true },
+        "/close-completed-issues\\.ps1/": { "approve": true, "matchCommandLine": true },
+        "/tools[\\\\/]validators/":   { "approve": true, "matchCommandLine": true },
+
+        // Validators / tests via the standard entry points (common scripts).
+        "/^python -m kerrigan_cli check 2>&1$/": { "approve": true, "matchCommandLine": true },
+        "/python -m pytest/":         { "approve": true, "matchCommandLine": true },
+        "/python -m tools[.\\\\/]/":  { "approve": true, "matchCommandLine": true },
+        "pytest": true,
+        "kerrigan": true,
+
+        // ──────────────────────────────────────────────────────────────────
+        // Tier 1: read-only inspection (git, gh, PowerShell). Always safe.
+        // ──────────────────────────────────────────────────────────────────
+        "git status": true,
+        "git diff": true,
+        "git log": true,
+        "git show": true,
+        "git branch": true,
+        "git fetch": true,
+        "gh pr view": true,
+        "gh pr list": true,
+        "gh pr diff": true,
+        "gh pr checks": true,
+        "gh issue view": true,
+        "gh issue list": true,
+        "gh run list": true,
+        "gh run view": true,
+        "Get-ChildItem": true,
+        "Get-Content": true,
+        "Get-Item": true,
+        "Select-String": true,
+        "Select-Object": true,
+        "Where-Object": true,
+        "ForEach-Object": true,
+        "ConvertFrom-Json": true,
+        "Sort-Object": true,
+        "Measure-Object": true,
+        "Test-Path": true,
+
+        // ──────────────────────────────────────────────────────────────────
+        // Tier 2: routine, reversible local git writes.
+        // ──────────────────────────────────────────────────────────────────
+        "git add": true,
+        "git commit": true,
+        "git checkout": true,
+        "git switch": true,
+        "git stash": true,
+        "git push": true,
+
+        // ──────────────────────────────────────────────────────────────────
+        // Tier 3: HARD DENY — always require explicit approval.
+        // `false` wins over any allow above, so these prompt even if the
+        // allowlist later grows broader. Build-clean goes via clean-build.ps1.
+        // ──────────────────────────────────────────────────────────────────
+        "/--force(-with-lease)?\\b/":                    { "approve": false, "matchCommandLine": true },
+        "/--no-verify\\b/":                              { "approve": false, "matchCommandLine": true },
+        "/--admin\\b/":                                  { "approve": false, "matchCommandLine": true },
+        "/git\\s+reset\\s+--hard/":                      { "approve": false, "matchCommandLine": true },
+        "/git\\s+clean\\b/":                             { "approve": false, "matchCommandLine": true },
+        "/git\\s+restore\\b/":                           { "approve": false, "matchCommandLine": true },
+        "/git\\s+branch\\s+-D/":                         { "approve": false, "matchCommandLine": true },
+        "/\\brm\\b|\\bRemove-Item\\b|\\bdel\\b/":        { "approve": false, "matchCommandLine": true },
+        "/gh\\s+pr\\s+merge(?!.*--auto)/":               { "approve": false, "matchCommandLine": true },
+        "/gh\\s+(pr|issue)\\s+close\\b/":                { "approve": false, "matchCommandLine": true },
+        "/gh\\s+repo\\s+delete\\b/":                     { "approve": false, "matchCommandLine": true },
+        "/gh\\s+api\\b.*(--method\\s+|-X\\s+)(POST|PUT|PATCH|DELETE)/": { "approve": false, "matchCommandLine": true }
+    },
+
+    // Protect secrets from agent edits (require manual approval to touch).
+    "chat.tools.edits.autoApprove": {
+        "**/.env": false,
+        "**/.env.*": false,
+        "**/*.pem": false,
+        "**/*.key": false,
+        "**/id_rsa*": false,
+        "**/secrets*.*": false
+    }
+}

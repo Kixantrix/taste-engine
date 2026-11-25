@@ -1,0 +1,376 @@
+"""
+Tests for agent feedback system validation.
+
+This module validates that the feedback backchannel system is properly configured
+and that feedback files follow the required structure.
+"""
+
+import unittest
+from pathlib import Path
+import yaml
+import re
+
+
+class TestFeedbackStructure(unittest.TestCase):
+    """Test suite for feedback system structure and configuration"""
+
+    def setUp(self):
+        """Set up test fixtures"""
+        self.repo_root = Path(__file__).resolve().parent.parent
+        self.feedback_dir = self.repo_root / "feedback"
+        self.agent_feedback_dir = self.feedback_dir / "agent-feedback"
+        self.processed_dir = self.feedback_dir / "processed"
+
+    def test_feedback_directories_exist(self):
+        """Test that required feedback directories exist"""
+        self.assertTrue(self.feedback_dir.exists(),
+                       "feedback/ directory should exist")
+        self.assertTrue(self.agent_feedback_dir.exists(),
+                       "feedback/agent-feedback/ directory should exist")
+        self.assertTrue(self.processed_dir.exists(),
+                       "feedback/processed/ directory should exist")
+
+    def test_template_exists(self):
+        """Test that feedback template exists"""
+        template = self.agent_feedback_dir / "TEMPLATE.yaml"
+        self.assertTrue(template.exists(),
+                       "feedback/agent-feedback/TEMPLATE.yaml should exist")
+
+    def test_readme_files_exist(self):
+        """Test that README files exist in feedback directories"""
+        agent_readme = self.agent_feedback_dir / "README.md"
+        processed_readme = self.processed_dir / "README.md"
+        
+        self.assertTrue(agent_readme.exists(),
+                       "feedback/agent-feedback/README.md should exist")
+        self.assertTrue(processed_readme.exists(),
+                       "feedback/processed/README.md should exist")
+
+    def test_feedback_spec_exists(self):
+        """Test that feedback specification document exists"""
+        spec = self.repo_root / "specs" / "kerrigan" / "_archive-v1" / "080-agent-feedback.md"
+        self.assertTrue(spec.exists(),
+                       "specs/kerrigan/_archive-v1/080-agent-feedback.md should exist")
+
+    def test_v1_archive_readme_exists(self):
+        """Test that v1 archive includes a README notice"""
+        archive_readme = self.repo_root / "specs" / "kerrigan" / "_archive-v1" / "README.md"
+        self.assertTrue(archive_readme.exists(),
+                       "specs/kerrigan/_archive-v1/README.md should exist")
+
+    def test_feedback_playbook_exists(self):
+        """Test that feedback review playbook exists"""
+        playbook = self.repo_root / "playbooks" / "feedback-review.md"
+        self.assertTrue(playbook.exists(),
+                       "playbooks/feedback-review.md should exist")
+
+
+class TestFeedbackTemplate(unittest.TestCase):
+    """Test suite for feedback template validation"""
+
+    def setUp(self):
+        """Set up test fixtures"""
+        self.repo_root = Path(__file__).resolve().parent.parent
+        self.template_path = self.repo_root / "feedback" / "agent-feedback" / "TEMPLATE.yaml"
+
+    def test_template_contains_required_fields(self):
+        """Test that template documents all required fields"""
+        with open(self.template_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        required_fields = [
+            "timestamp",
+            "issue_number",
+            "agent_role",
+            "category",
+            "severity",
+            "title",
+            "description"
+        ]
+
+        for field in required_fields:
+            self.assertIn(field, content,
+                         f"Template should document required field: {field}")
+
+    def test_template_documents_categories(self):
+        """Test that template documents all feedback categories"""
+        with open(self.template_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        categories = [
+            "prompt_clarity",
+            "missing_information",
+            "artifact_conflict",
+            "tool_limitation",
+            "quality_bar",
+            "workflow_friction",
+            "success_pattern"
+        ]
+
+        for category in categories:
+            self.assertIn(category, content,
+                         f"Template should document category: {category}")
+
+    def test_template_documents_severities(self):
+        """Test that template documents all severity levels"""
+        with open(self.template_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        severities = ["low", "medium", "high"]
+
+        for severity in severities:
+            self.assertIn(severity, content,
+                         f"Template should document severity: {severity}")
+
+    def test_template_documents_statuses(self):
+        """Test that template documents all status values"""
+        with open(self.template_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        statuses = ["new", "reviewed", "implemented", "wont_fix"]
+
+        for status in statuses:
+            self.assertIn(status, content,
+                         f"Template should document status: {status}")
+
+
+class TestFeedbackFiles(unittest.TestCase):
+    """Test suite for validating feedback YAML files"""
+
+    def setUp(self):
+        """Set up test fixtures"""
+        self.repo_root = Path(__file__).resolve().parent.parent
+        self.agent_feedback_dir = self.repo_root / "feedback" / "agent-feedback"
+        self.processed_dir = self.repo_root / "feedback" / "processed"
+        
+        # Define valid values for validation
+        self.valid_roles = ["spec", "architect", "swe", "testing", "deployment", "debugging", "security", "kerrigan", "triage"]
+        self.valid_categories = ["prompt_clarity", "missing_information", "artifact_conflict", 
+                                "tool_limitation", "quality_bar", "workflow_friction", "success_pattern",
+                                "process-gap", "tooling", "process-improvement"]
+        self.valid_severities = ["low", "medium", "high", "success"]
+        self.valid_statuses = ["new", "reviewed", "implemented", "wont_fix"]
+
+    def get_feedback_files(self, directory):
+        """Get all YAML feedback files from directory (excluding template)"""
+        if not directory.exists():
+            return []
+        
+        yaml_files = []
+        for file in directory.glob("*.yaml"):
+            if file.name != "TEMPLATE.yaml":
+                yaml_files.append(file)
+        return yaml_files
+
+    def test_feedback_files_are_valid_yaml(self):
+        """Test that all feedback files are valid YAML"""
+        all_files = (self.get_feedback_files(self.agent_feedback_dir) + 
+                    self.get_feedback_files(self.processed_dir))
+        
+        for feedback_file in all_files:
+            with self.subTest(file=feedback_file.name):
+                with open(feedback_file, "r", encoding="utf-8") as f:
+                    try:
+                        yaml.safe_load(f)
+                    except yaml.YAMLError as e:
+                        self.fail(f"Invalid YAML in {feedback_file.name}: {e}")
+
+    def test_feedback_files_have_required_fields(self):
+        """Test that feedback files contain all required fields"""
+        all_files = (self.get_feedback_files(self.agent_feedback_dir) + 
+                    self.get_feedback_files(self.processed_dir))
+        
+        # Support both old schema (agent, date, observation) and new schema (agent_role, timestamp, description)
+        # At minimum, files need: a role/agent, a category, and a severity
+        required_fields_new = ["timestamp", "agent_role", "category", "severity"]
+        required_fields_old = ["date", "agent", "category", "severity"]
+        alternative_fields = [("timestamp", "date"), ("agent_role", "agent"), ("description", "observation")]
+
+        for feedback_file in all_files:
+            with self.subTest(file=feedback_file.name):
+                with open(feedback_file, "r", encoding="utf-8") as f:
+                    data = yaml.safe_load(f)
+                
+                # Check that either old or new schema fields are present
+                has_category = "category" in data
+                has_severity = "severity" in data
+                has_role = "agent_role" in data or "agent" in data
+                has_timestamp = "timestamp" in data or "date" in data
+                
+                self.assertTrue(has_category, f"{feedback_file.name} should have 'category' field")
+                self.assertTrue(has_severity, f"{feedback_file.name} should have 'severity' field")
+                self.assertTrue(has_role, f"{feedback_file.name} should have 'agent_role' or 'agent' field")
+                self.assertTrue(has_timestamp, f"{feedback_file.name} should have 'timestamp' or 'date' field")
+
+    def test_feedback_files_have_valid_roles(self):
+        """Test that feedback files use valid agent roles"""
+        all_files = (self.get_feedback_files(self.agent_feedback_dir) + 
+                    self.get_feedback_files(self.processed_dir))
+        
+        for feedback_file in all_files:
+            with self.subTest(file=feedback_file.name):
+                with open(feedback_file, "r", encoding="utf-8") as f:
+                    data = yaml.safe_load(f)
+                
+                # Support both old schema (agent) and new schema (agent_role)
+                role = data.get("agent_role") or data.get("agent")
+                if role:
+                    self.assertIn(role, self.valid_roles,
+                                f"{feedback_file.name} has invalid role: {role}")
+
+    def test_feedback_files_have_valid_categories(self):
+        """Test that feedback files use valid categories"""
+        all_files = (self.get_feedback_files(self.agent_feedback_dir) + 
+                    self.get_feedback_files(self.processed_dir))
+        
+        for feedback_file in all_files:
+            with self.subTest(file=feedback_file.name):
+                with open(feedback_file, "r", encoding="utf-8") as f:
+                    data = yaml.safe_load(f)
+                
+                if "category" in data:
+                    self.assertIn(data["category"], self.valid_categories,
+                                f"{feedback_file.name} has invalid category: {data['category']}")
+
+    def test_feedback_files_have_valid_severities(self):
+        """Test that feedback files use valid severity levels"""
+        all_files = (self.get_feedback_files(self.agent_feedback_dir) + 
+                    self.get_feedback_files(self.processed_dir))
+        
+        for feedback_file in all_files:
+            with self.subTest(file=feedback_file.name):
+                with open(feedback_file, "r", encoding="utf-8") as f:
+                    data = yaml.safe_load(f)
+                
+                if "severity" in data:
+                    self.assertIn(data["severity"], self.valid_severities,
+                                f"{feedback_file.name} has invalid severity: {data['severity']}")
+
+    def test_at_least_one_feedback_entry_present(self):
+        """Guard that the generic validators exercise real feedback entries.
+
+        The schema-validation tests above glob feedback files; if the directory
+        only held TEMPLATE.yaml they would silently pass on an empty set. This
+        asserts at least one non-template entry exists across agent-feedback or
+        processed, so the suite has something real to validate.
+        """
+        all_files = (self.get_feedback_files(self.agent_feedback_dir) +
+                    self.get_feedback_files(self.processed_dir))
+        self.assertGreater(len(all_files), 0,
+                          "Expected at least one non-template feedback entry to validate")
+
+    def test_processed_files_have_status(self):
+        """Test that processed feedback files have status field"""
+        processed_files = self.get_feedback_files(self.processed_dir)
+        
+        for feedback_file in processed_files:
+            with self.subTest(file=feedback_file.name):
+                with open(feedback_file, "r", encoding="utf-8") as f:
+                    data = yaml.safe_load(f)
+                
+                self.assertIn("status", data,
+                            f"Processed file {feedback_file.name} should have status field")
+                self.assertIn(data["status"], self.valid_statuses,
+                            f"{feedback_file.name} has invalid status: {data.get('status')}")
+
+    def test_feedback_filename_format(self):
+        """Test that feedback files follow naming convention"""
+        all_files = (self.get_feedback_files(self.agent_feedback_dir) + 
+                    self.get_feedback_files(self.processed_dir))
+        
+        # Expected format: YYYY-MM-DD-<issue-number>-<short-slug>.yaml or YYYY-MM-DD-<short-slug>.yaml
+        # Issue number is optional for feedback not tied to specific issues
+        # Slug should start with a word character, followed by any word characters or dashes
+        pattern = re.compile(r'^\d{4}-\d{2}-\d{2}-(\d+-)?[\w][\w-]*\.yaml$')
+        
+        for feedback_file in all_files:
+            with self.subTest(file=feedback_file.name):
+                self.assertIsNotNone(pattern.match(feedback_file.name),
+                                   f"{feedback_file.name} doesn't follow naming convention: "
+                                   f"YYYY-MM-DD-[<issue-number>-]<short-slug>.yaml")
+
+
+class TestAgentPromptFeedbackSections(unittest.TestCase):
+    """Test suite for validating that agent prompts mention feedback mechanism"""
+
+    def setUp(self):
+        """Set up test fixtures"""
+        self.repo_root = Path(__file__).resolve().parent.parent
+        self.agents_dir = self.repo_root / ".github" / "agents"
+
+    def test_agent_prompts_mention_feedback(self):
+        """Test that v2 agent profiles mention the feedback mechanism"""
+        kerrigan_prompt = self.agents_dir / "kerrigan.md"
+        
+        self.assertTrue(kerrigan_prompt.exists(),
+                       "Should find kerrigan.md profile")
+
+        content = kerrigan_prompt.read_text(encoding="utf-8")
+        
+        # kerrigan is the profile responsible for feedback
+        self.assertIn("feedback", content.lower(),
+                    "kerrigan.md should mention feedback mechanism")
+
+    def test_kerrigan_prompt_mentions_feedback_processing(self):
+        """Test that Kerrigan prompt mentions feedback processing responsibility"""
+        kerrigan_prompt = self.agents_dir / "kerrigan.md"
+        
+        content = kerrigan_prompt.read_text(encoding="utf-8").lower()
+        
+        self.assertIn("feedback", content,
+                     "Kerrigan prompt should mention feedback")
+        self.assertIn("feedback/agent-feedback", content,
+                     "Kerrigan prompt should mention feedback directory")
+
+
+class TestDocumentationReferences(unittest.TestCase):
+    """Test suite for validating that key documents reference feedback system"""
+
+    def setUp(self):
+        """Set up test fixtures"""
+        self.repo_root = Path(__file__).resolve().parent.parent
+
+    def test_readme_mentions_feedback(self):
+        """Test that README mentions agent feedback"""
+        readme = self.repo_root / "README.md"
+        
+        with open(readme, "r", encoding="utf-8") as f:
+            content = f.read()
+        
+        self.assertIn("feedback", content.lower(),
+                     "README should mention feedback")
+
+    def test_agents_readme_mentions_feedback(self):
+        """Test that agents README mentions feedback or legacy reference"""
+        agents_readme = self.repo_root / ".github" / "agents" / "README.md"
+        
+        with open(agents_readme, "r", encoding="utf-8") as f:
+            content = f.read()
+        
+        # v2 README may reference feedback via kerrigan profile or legacy docs
+        has_feedback_ref = (
+            "feedback" in content.lower()
+            or "kerrigan" in content.lower()
+        )
+        self.assertTrue(has_feedback_ref,
+                       "Agents README should reference feedback or kerrigan profile")
+
+    def test_feedback_review_playbook_mentions_feedback(self):
+        """Test that the feedback-review playbook mentions feedback artifacts.
+
+        playbooks/handoffs.md was deleted in #274 as a v1 orphan; feedback-review.md
+        is the v2 home for feedback workflow guidance.
+        """
+        playbook = self.repo_root / "playbooks" / "feedback-review.md"
+
+        with open(playbook, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        self.assertIn("feedback", content.lower(),
+                     "feedback-review playbook should mention feedback")
+        self.assertIn("agent-feedback", content,
+                     "feedback-review playbook should reference the agent-feedback artifact path")
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1,0 +1,75 @@
+# Cloud-agent PR loop
+
+Use this playbook for the recurring cloud-agent PR loop after a cloud push.
+
+## Lifecycle
+
+```text
+dispatch
+  -> cloud push
+  -> action_required
+  -> rerun
+  -> CI green
+  -> promote draft
+  -> Copilot review
+  -> resolve threads
+  -> auto-merge
+```
+
+## Helper scripts
+
+- `tools/pr-driver.ps1 <pr-number>`: auto-advance one PR pass; escalates only at decision points.
+  - Example: `./tools/pr-driver.ps1 270`
+  - Add `-AutoResolveConverged` to automatically resolve pre-fix threads after a clean re-review.
+  - Add `-DryRun` to preview actions without executing them.
+- `tools/pr-doctor.ps1 <pr-number>`: one-shot PR diagnostic snapshot.
+  - Example: `./tools/pr-doctor.ps1 270`
+- `tools/pr-resolve-threads.ps1 <pr-number>`: list and resolve unresolved review threads.
+  - Example: `./tools/pr-resolve-threads.ps1 270 -Confirm:$false`
+- `tools/pr-rerun-pending.ps1 <pr-number>`: rerun workflow runs stuck with `action_required`.
+  - Example: `./tools/pr-rerun-pending.ps1 270`
+- `tools/pr-redispatch.ps1 <pr-number>`: post redispatch comment and re-arm auto-merge.
+  - Example: `./tools/pr-redispatch.ps1 270`
+- `tools/pr-promote.ps1 <pr-number>`: promote draft PR through ready/update-branch/reviewer/auto-merge in order.
+  - Example: `./tools/pr-promote.ps1 270`
+
+## Common stalls and how to clear them
+
+### 1) `action_required` runs
+
+Symptom: CI appears idle, but checks are blocked.
+
+Clear:
+
+1. Run `./tools/pr-doctor.ps1 <pr>`.
+2. Confirm runs listed in the `ACTION_REQUIRED WORKFLOW RUNS` section.
+3. Run `./tools/pr-rerun-pending.ps1 <pr>` to rerun those runs.
+
+### 2) Dropped auto-merge
+
+Symptom: checks are green but PR is not merging.
+
+Clear:
+
+1. Re-arm auto-merge with `gh pr merge <pr> --auto --squash`.
+2. Or run `./tools/pr-redispatch.ps1 <pr>` (posts comment + re-arms).
+
+### 3) Unresolved review threads silently blocking merge
+
+Symptom: all checks are green but merge still waits.
+
+Clear:
+
+1. Run `./tools/pr-doctor.ps1 <pr>` to see resolved vs unresolved counts.
+2. Run `./tools/pr-resolve-threads.ps1 <pr> -DryRun` to preview unresolved threads.
+3. Resolve with `./tools/pr-resolve-threads.ps1 <pr>`.
+
+## Quick loop checklist
+
+1. Run the driver: `./tools/pr-driver.ps1 <pr>` (auto-advances; exits 2 on escalation)
+2. Diagnose (manual): `./tools/pr-doctor.ps1 <pr>`
+3. Promote to merge queue: `./tools/pr-promote.ps1 <pr>`
+4. Rerun blocked workflows: `./tools/pr-rerun-pending.ps1 <pr>`
+5. Re-dispatch critical feedback: `./tools/pr-redispatch.ps1 <pr>`
+6. Resolve advisory/handled threads: `./tools/pr-resolve-threads.ps1 <pr>`
+7. Verify auto-merge remains armed after updates.

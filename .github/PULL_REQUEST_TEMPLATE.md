@@ -1,0 +1,65 @@
+## What
+Describe what this PR changes.
+
+## Why
+Why is this change needed?
+
+## Links
+- Project folder: `specs/projects/<project-name>/`
+- Milestone/task:
+
+## Testing Classification
+
+### Automated Tests
+<!-- List automated tests added or modified -->
+- [ ] Unit tests added/updated
+- [ ] Integration tests added/updated
+- [ ] All existing tests pass
+
+### Manual Testing Required
+<!-- List functionality that requires manual verification. Add `needs:manual-testing` label if applicable. -->
+- [ ] No manual testing required
+
+<!-- Examples:
+- [ ] **Workflow: workflow-name.yml** - Trigger condition, verify expected behavior
+- [ ] **UI Component** - Visual verification of styling and interactions
+- [ ] **Authentication Flow** - Test with real credentials
+- [ ] **External API Integration** - Test with real endpoints
+-->
+
+### Cannot Test (with justification)
+<!-- List items that cannot be tested and explain why -->
+- N/A
+
+<!-- Examples:
+- External webhook signatures - Requires third-party signing keys
+- Production environment configuration - No test environment available
+-->
+
+## Checklist
+- [ ] CI is green
+- [ ] Tests added/updated (or justified)
+- [ ] Manual testing completed (if required)
+- [ ] Docs updated (spec/plan/runbook as needed)
+- [ ] No unnecessary large files or monoliths
+- [ ] Secrets not committed
+
+## Testing Details
+
+When documenting testing, be specific and factually accurate. **Do NOT fabricate test counts.**
+
+### Automated Tests
+
+**Tests Added:**
+<!-- Example: "Added 5 new tests in tests/test_auth.py (lines 34-67)" -->
+<!-- Or: "No new tests added - changes are documentation only" -->
+
+**Test Results:**
+<!-- Example: "All 270 tests pass - Ran 270 tests in 0.4s" -->
+<!-- Include actual output from test runner -->
+<!-- Cite specific test files and line numbers when claiming tests were added -->
+
+### Manual Testing
+<!-- If applicable, describe manual testing performed -->
+<!-- Example: "Manually verified authentication flow with OAuth provider" -->
+<!-- Or: "No manual testing required" -->

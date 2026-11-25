@@ -1,0 +1,235 @@
+#!/usr/bin/env python3
+"""Tests for the agents_md validator."""
+
+import tempfile
+import unittest
+from pathlib import Path
+
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "tools" / "validators"))
+
+from agents_md import parse_frontmatter, check_agent_profile, check_agents_md, check_skill
+
+
+class TestParseFrontmatter(unittest.TestCase):
+    """Test frontmatter parsing."""
+
+    def test_valid_frontmatter_lf(self):
+        text = "---\nname: local\ndescription: A conductor\n---\n# Body"
+        fm = parse_frontmatter(text)
+        self.assertIsNotNone(fm)
+        self.assertEqual(fm["name"], "local")
+        self.assertEqual(fm["description"], "A conductor")
+
+    def test_valid_frontmatter_crlf(self):
+        text = "---\r\nname: cloud\r\ndescription: An executor\r\n---\r\n# Body"
+        fm = parse_frontmatter(text)
+        self.assertIsNotNone(fm)
+        self.assertEqual(fm["name"], "cloud")
+
+    def test_missing_frontmatter(self):
+        text = "# No frontmatter here"
+        fm = parse_frontmatter(text)
+        self.assertIsNone(fm)
+
+    def test_skips_comments_and_lists(self):
+        text = "---\nname: test\n# a comment\n- list item\n  continuation: yes\ndescription: desc\n---\n"
+        fm = parse_frontmatter(text)
+        self.assertIsNotNone(fm)
+        self.assertEqual(fm["name"], "test")
+        self.assertEqual(fm["description"], "desc")
+        self.assertNotIn("continuation", fm)
+
+
+class TestCheckAgentProfile(unittest.TestCase):
+    """Test profile validation."""
+
+    def _write_profile(self, tmpdir: Path, name: str, content: str) -> Path:
+        path = tmpdir / name
+        path.write_text(content, encoding="utf-8")
+        return path
+
+    def test_valid_profile(self):
+        with tempfile.TemporaryDirectory() as td:
+            p = self._write_profile(
+                Path(td),
+                "cloud.md",
+                "---\n"
+                "name: cloud\n"
+                "description: Executor\n"
+                "needs: [cloud-env]\n"
+                "blocks_on: [ambiguous_goal]\n"
+                "budget:\n"
+                "  max_turns: 40\n"
+                "---\n"
+                "# cloud",
+            )
+            errors = []
+            # Monkey-patch REPO_ROOT for relative path display
+            import agents_md
+            old_root = agents_md.REPO_ROOT
+            agents_md.REPO_ROOT = Path(td)
+            try:
+                check_agent_profile(p, errors)
+            finally:
+                agents_md.REPO_ROOT = old_root
+            self.assertEqual(errors, [])
+
+    def test_missing_frontmatter(self):
+        with tempfile.TemporaryDirectory() as td:
+            p = self._write_profile(Path(td), "bad.md", "# No frontmatter")
+            errors = []
+            import agents_md
+            old_root = agents_md.REPO_ROOT
+            agents_md.REPO_ROOT = Path(td)
+            try:
+                check_agent_profile(p, errors)
+            finally:
+                agents_md.REPO_ROOT = old_root
+            self.assertEqual(len(errors), 1)
+            self.assertIn("missing YAML frontmatter", errors[0])
+
+    def test_missing_name_field(self):
+        with tempfile.TemporaryDirectory() as td:
+            p = self._write_profile(Path(td), "test.md",
+                "---\ndescription: Something\n---\n# test")
+            errors = []
+            import agents_md
+            old_root = agents_md.REPO_ROOT
+            agents_md.REPO_ROOT = Path(td)
+            try:
+                check_agent_profile(p, errors)
+            finally:
+                agents_md.REPO_ROOT = old_root
+            self.assertTrue(any("name" in e for e in errors))
+
+    def test_name_mismatch(self):
+        with tempfile.TemporaryDirectory() as td:
+            p = self._write_profile(Path(td), "cloud.md",
+                "---\nname: local\ndescription: Wrong name\n---\n# cloud")
+            errors = []
+            import agents_md
+            old_root = agents_md.REPO_ROOT
+            agents_md.REPO_ROOT = Path(td)
+            try:
+                check_agent_profile(p, errors)
+            finally:
+                agents_md.REPO_ROOT = old_root
+            self.assertTrue(any("does not match" in e for e in errors))
+
+    def test_speckit_agent_only_requires_description(self):
+        with tempfile.TemporaryDirectory() as td:
+            p = self._write_profile(Path(td), "speckit.git.commit.agent.md",
+                "---\ndescription: Auto-commit\n---\n# commit")
+            errors = []
+            import agents_md
+            old_root = agents_md.REPO_ROOT
+            agents_md.REPO_ROOT = Path(td)
+            try:
+                check_agent_profile(p, errors)
+            finally:
+                agents_md.REPO_ROOT = old_root
+            self.assertEqual(errors, [])
+
+    def test_mcp_servers_list_rejected(self):
+        with tempfile.TemporaryDirectory() as td:
+            p = self._write_profile(Path(td), "x.agent.md",
+                "---\ndescription: X\nmcp-servers: []\n---\n# x")
+            errors = []
+            import agents_md
+            old_root = agents_md.REPO_ROOT
+            agents_md.REPO_ROOT = Path(td)
+            try:
+                check_agent_profile(p, errors)
+            finally:
+                agents_md.REPO_ROOT = old_root
+            self.assertTrue(any("mcp-servers" in e for e in errors))
+
+    def _profile_errors(self, text):
+        import agents_md
+        with tempfile.TemporaryDirectory() as td:
+            p = self._write_profile(Path(td), "x.agent.md", text)
+            errors = []
+            old_root = agents_md.REPO_ROOT
+            agents_md.REPO_ROOT = Path(td)
+            try:
+                check_agent_profile(p, errors)
+            finally:
+                agents_md.REPO_ROOT = old_root
+            return errors
+
+    def test_mcp_servers_block_list_rejected(self):
+        errors = self._profile_errors("---\ndescription: X\nmcp-servers:\n  - foo\n---\n# x")
+        self.assertTrue(any("mcp-servers" in e for e in errors))
+
+    def test_mcp_servers_empty_or_mapping_accepted(self):
+        self.assertEqual(self._profile_errors("---\ndescription: X\nmcp-servers:\n---\n"), [])
+        self.assertEqual(self._profile_errors("---\ndescription: X\nmcp-servers: {}\n---\n"), [])
+
+    def test_profile_with_invalid_yaml_rejected(self):
+        errors = self._profile_errors('---\ndescription: "unterminated\n---\n# x')
+        self.assertTrue(any("not valid YAML" in e for e in errors))
+
+
+class TestCheckSkill(unittest.TestCase):
+    """Test .github/skills/*/SKILL.md validation."""
+
+    def _check(self, dirname, text):
+        import agents_md
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / dirname / "SKILL.md"
+            p.parent.mkdir()
+            p.write_text(text, encoding="utf-8")
+            errors = []
+            old_root = agents_md.REPO_ROOT
+            agents_md.REPO_ROOT = Path(td)
+            try:
+                check_skill(p, errors)
+            finally:
+                agents_md.REPO_ROOT = old_root
+            return errors
+
+    def test_valid_skill(self):
+        self.assertEqual(self._check("smoke-test",
+            "---\nname: smoke-test\ndescription: \"Use when X.\"\n---\n# Skill"), [])
+
+    def test_missing_frontmatter(self):
+        errors = self._check("smoke-test", "# Skill: smoke-test\n")
+        self.assertTrue(any("missing YAML frontmatter" in e for e in errors))
+
+    def test_name_must_match_directory(self):
+        errors = self._check("smoke-test", "---\nname: smoke\ndescription: d\n---\n")
+        self.assertTrue(any("name must be 'smoke-test'" in e for e in errors))
+
+    def test_invalid_yaml_rejected(self):
+        errors = self._check("smoke-test", '---\nname: smoke-test\ndescription: "unterminated\n---\n')
+        self.assertTrue(any("not valid YAML" in e for e in errors))
+
+
+class TestCheckAgentsMd(unittest.TestCase):
+    """Test AGENTS.md validation."""
+
+    def test_missing_agents_md(self):
+        with tempfile.TemporaryDirectory() as td:
+            import agents_md
+            old_md = agents_md.AGENTS_MD
+            old_root = agents_md.REPO_ROOT
+            agents_md.AGENTS_MD = Path(td) / "AGENTS.md"
+            agents_md.REPO_ROOT = Path(td)
+            try:
+                errors = []
+                check_agents_md(errors)
+                self.assertTrue(any("missing" in e for e in errors))
+            finally:
+                agents_md.AGENTS_MD = old_md
+                agents_md.REPO_ROOT = old_root
+
+    def test_valid_agents_md(self):
+        errors = []
+        check_agents_md(errors)
+        self.assertEqual(errors, [],
+            "AGENTS.md in the real repo should pass validation")
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1,0 +1,89 @@
+import type { NodeProps } from "@xyflow/react";
+import { useEffect, useState } from "react";
+import { NODE_HEIGHT, NODE_WIDTH, type StageDagNode } from "../../lib/dag-layout.js";
+import type { StageStatus } from "../../lib/status.js";
+import { ABSORBING_FLOW_DURATION_MS } from "../PrFlowOverlay/constants.js";
+
+interface StageStatusStyle {
+  indicatorClassName: string;
+  badgeClassName: string;
+}
+
+// Exact status color mapping:
+// blocked=red, needs-attestation/needs-human-test=accent(amber),
+// in-review/dispatched=brand, merged=green, planned=neutral.
+const STATUS_STYLE_BY_STATE: Record<StageStatus, StageStatusStyle> = {
+  blocked: {
+    indicatorClassName: "bg-red-500",
+    badgeClassName: "text-red-300 border-red-500/40",
+  },
+  "needs-attestation": {
+    indicatorClassName: "bg-accent",
+    badgeClassName: "text-accent border-accent/40",
+  },
+  "needs-human-test": {
+    indicatorClassName: "bg-accent",
+    badgeClassName: "text-accent border-accent/40",
+  },
+  "in-review": {
+    indicatorClassName: "bg-brand",
+    badgeClassName: "text-brand border-brand/40",
+  },
+  dispatched: {
+    indicatorClassName: "bg-brand",
+    badgeClassName: "text-brand border-brand/40",
+  },
+  merged: {
+    indicatorClassName: "bg-green-500",
+    badgeClassName: "text-green-300 border-green-500/40",
+  },
+  planned: {
+    indicatorClassName: "bg-status-planned",
+    badgeClassName: "text-neutral-dim border-neutral-border-strong",
+  },
+};
+const STAGE_PULSE_DURATION_MS = ABSORBING_FLOW_DURATION_MS;
+
+export function StageNode({ id, data }: NodeProps<StageDagNode>) {
+  const statusStyle = STATUS_STYLE_BY_STATE[data.status];
+  const [pulsing, setPulsing] = useState(false);
+
+  useEffect(() => {
+    if (typeof data.pulseAt !== "number" || data.pulseAt <= 0) {
+      return;
+    }
+
+    setPulsing(true);
+    const timeout = window.setTimeout(() => {
+      setPulsing(false);
+    }, STAGE_PULSE_DURATION_MS);
+
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [data.pulseAt]);
+
+  return (
+    <article
+      className={`rounded-lg border border-neutral-border bg-neutral-surface p-3 shadow-[0_0_0_1px_rgba(255,255,255,0.02)] transition-[box-shadow,ring-color] duration-200 ease-[cubic-bezier(0.2,0,0,1)] ${
+        pulsing ? "ring-2 ring-green-500/70 shadow-[0_0_0_1px_rgba(34,197,94,0.55)]" : ""
+      }`}
+      data-pulsing={pulsing ? "true" : "false"}
+      data-testid={`stage-node-${id}`}
+      style={{ height: NODE_HEIGHT, width: NODE_WIDTH }}
+    >
+      <div className="mb-2 flex items-center gap-2 text-nano uppercase tracking-[0.06em] text-neutral-muted">
+        <span className={`inline-block h-2 w-2 rounded-full ${statusStyle.indicatorClassName}`} />
+        <span>{data.level === 2 ? "Stage" : "Substage"}</span>
+      </div>
+      <h3 className="line-clamp-2 break-words whitespace-normal text-body font-medium leading-5 text-neutral-fg">
+        {data.label}
+      </h3>
+      <p
+        className={`mt-2 inline-flex rounded border px-1.5 py-0.5 text-nano uppercase tracking-[0.05em] ${statusStyle.badgeClassName}`}
+      >
+        {data.status}
+      </p>
+    </article>
+  );
+}
