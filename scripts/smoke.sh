@@ -128,6 +128,43 @@ else
 fi
 echo ""
 
+# --- Check 6: Optional taste-engine endpoints ---
+echo "[ Taste Engine ]"
+TASTE_ENGINE_BASE_URL="${TASTE_SMOKE_BASE_URL:-}"
+if [[ -z "$TASTE_ENGINE_BASE_URL" ]]; then
+    pass "taste-engine smoke skipped (set TASTE_SMOKE_BASE_URL to enable)"
+else
+    TASTE_ENGINE_BASE_URL="${TASTE_ENGINE_BASE_URL%/}"
+    if curl --fail --silent --show-error "$TASTE_ENGINE_BASE_URL/healthz" \
+        | python3 -c 'import json, sys; assert json.load(sys.stdin) == {"status": "ok"}'; then
+        pass "taste-engine /healthz"
+    else
+        fail "taste-engine /healthz failed"
+    fi
+
+    if curl --fail --silent --show-error "$TASTE_ENGINE_BASE_URL/readyz" \
+        | python3 -c 'import json, sys; assert json.load(sys.stdin) == {"status": "ok"}'; then
+        pass "taste-engine /readyz"
+    else
+        fail "taste-engine /readyz failed"
+    fi
+
+    if curl --fail --silent --show-error "$TASTE_ENGINE_BASE_URL/v1/openapi.json" \
+        | python3 -c 'import json, sys; assert json.load(sys.stdin)["info"]["title"] == "Taste Engine"'; then
+        pass "taste-engine /v1/openapi.json"
+    else
+        fail "taste-engine /v1/openapi.json failed"
+    fi
+
+    if curl --fail --silent --show-error "$TASTE_ENGINE_BASE_URL/" \
+        | python3 -c 'import sys; body = sys.stdin.read(); assert "<title>Taste Engine</title>" in body and "Discover" in body'; then
+        pass "taste-engine Discover shell"
+    else
+        fail "taste-engine Discover shell failed"
+    fi
+fi
+echo ""
+
 # --- Summary ---
 TOTAL=$((PASS + FAIL))
 echo "=== Results: $PASS/$TOTAL passed ==="
