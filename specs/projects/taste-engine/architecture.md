@@ -34,7 +34,7 @@ flowchart LR
 
 ## Components & interfaces
 
-Python packages under `apps/taste-engine/` (layout proposed; finalized in T-SCAFFOLD):
+Python packages under `apps/taste-engine/` (layout proposed; finalized in OPS-01):
 
 | Module | Responsibility | Key interface |
 |---|---|---|

@@ -18,20 +18,19 @@ D1–D5.
   logged out, and record the fallback behaviour.
 - DISC-04: compare availability vendors using 50 household titles. Measure coverage, deep-link
   hit rate, quota fit and terms. Decide D3.
-- DISC-05: run a voice spike. Compare faster-whisper model sizes on the household CPU against
+- DISC-05: open maintainer discussions (PenguWatch, Sofa) about external score interfaces.
+- DISC-06: run a voice spike. Compare faster-whisper model sizes on the household CPU against
   in-browser Whisper for latency and accuracy, using 20 recorded reactions.
-- DISC-06: run a deploy spike. Deploy a hello-world FastAPI plus Postgres compose to Coolify,
-  then the same image to ACA via `azd`. Record any gotchas.
 
-**Exit:** every decision D1–D5 is recorded in `research.md`, with evidence links. No product code
-is written yet, apart from the spike throwaways in `examples/` or a scratch branch.
+**Exit:** every decision D1–D5 is recorded in `research.md`, with evidence links.
 
 ## Milestone 1 — Skeleton & evidence (deployable on both hosts)
 
-- T-SCAFFOLD: scaffold `apps/taste-engine` (FastAPI, Alembic, React PWA shell, Dockerfile,
-  `compose.yaml`), the CI workflow and the smoke script.
-- OPS-01: deploy to Coolify (compose app, env contract, migrations, health check, backups).
-- OPS-02: deploy to Azure (`azd` + Bicep, ACA, Postgres Flexible, Key Vault, GHCR pull).
+- OPS-01: scaffold `apps/taste-engine` (FastAPI, Alembic, React PWA shell, Dockerfile,
+  `compose.yaml`), the CI workflow and smoke. **Runs in parallel with M0**; it doesn't depend on
+  any D-decision.
+- OPS-02: deploy to Coolify (compose app, env contract, migrations, health check, backups).
+- OPS-03: deploy to Azure (`azd` + Bicep, ACA, Postgres Flexible, Key Vault, GHCR pull).
 - CORE-01: build the event schemas, migrations, Letterboxd/IMDb/Netflix/Trakt importers and
   idempotency.
 - CORE-02: add viewers, auth modes, export/restore and deletion.

@@ -18,7 +18,7 @@ environment are chosen separately for each AC.
   import → discover → launch → react. Fake mic input comes from
   `--use-fake-device-for-media-stream`.
 - **Smoke (`scripts/smoke.sh`):** `/healthz`, `/v1/openapi.json`, and an authenticated
-  `GET /v1/profiles/me`, run against any `SMOKE_BASE_URL`. Gates merges in CI on plain Compose;
+  `GET /v1/profiles/me`, run against any `TASTE_SMOKE_BASE_URL`. Gates merges in CI on plain Compose;
   attested runs cover Coolify and ACA.
 - **Scenario (manual-human):** the provider launch matrix (DISC-03) and real-voice sessions
   on household hardware.
@@ -27,7 +27,7 @@ environment are chosen separately for each AC.
 
 - Python: pytest, pytest-asyncio, respx, hypothesis (importer fuzzing), ruff, mypy.
 - Web: Vitest, Testing Library, Playwright, ESLint, `tsc --noEmit`.
-- CI: a `.github/workflows/taste-engine.yml` workflow (created by T-SCAFFOLD) with lint, unit,
+- CI: a `.github/workflows/taste-engine.yml` workflow (created by OPS-01) with lint, unit,
   integration (Postgres service), e2e (compose) and an image build/push to GHCR. It must also
   run on `merge_group` per `check_merge_queue.py`.
 

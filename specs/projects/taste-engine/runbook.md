@@ -1,7 +1,7 @@
 # Runbook: taste-engine
 
-Status: **draft.** These steps are the target procedure. OPS-01 and OPS-02 finalize them after
-the DISC-06 deploy spike.
+Status: **draft.** These steps are the target procedure. OPS-02 and OPS-03 finalize them after
+the first real deploys.
 
 ## Deploy
 
@@ -10,7 +10,7 @@ the DISC-06 deploy spike.
 ```bash
 cp apps/taste-engine/.env.example .env   # set AVAILABILITY_API_KEY, HOUSEHOLD_PASSPHRASE
 docker compose -f apps/taste-engine/compose.yaml up -d
-SMOKE_BASE_URL=http://localhost:8000 scripts/smoke.sh
+TASTE_SMOKE_BASE_URL=http://localhost:8000 scripts/smoke.sh
 ```
 
 **Coolify (self-host)**
@@ -22,7 +22,7 @@ SMOKE_BASE_URL=http://localhost:8000 scripts/smoke.sh
 3. Set the domain on `api` (the proxy target is port 8000), then deploy. The `migrate` service
    runs once.
 4. Enable scheduled Postgres backups to S3-compatible storage.
-5. Run `SMOKE_BASE_URL=https://<domain> scripts/smoke.sh`.
+5. Run `TASTE_SMOKE_BASE_URL=https://<domain> scripts/smoke.sh`.
 
 **Azure**
 
@@ -30,7 +30,7 @@ SMOKE_BASE_URL=http://localhost:8000 scripts/smoke.sh
 azd auth login
 azd env new taste-prod && azd env set IMAGE_TAG <tag>
 azd up        # provisions ACA env, api/worker apps, Postgres Flexible, Key Vault, migration job
-SMOKE_BASE_URL=$(azd env get-value API_URL) scripts/smoke.sh
+TASTE_SMOKE_BASE_URL=$(azd env get-value API_URL) scripts/smoke.sh
 ```
 
 ## Operate

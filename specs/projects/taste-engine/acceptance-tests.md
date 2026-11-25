@@ -5,7 +5,7 @@ Test paths are proposals; the owning task creates them.
 
 - `apps/taste-engine/tests/unit/**` and `tests/integration/**`: pytest
 - `apps/taste-engine/web/tests/e2e/**`: Playwright
-- `scripts/smoke.sh`: deploy smoke against `SMOKE_BASE_URL`
+- `scripts/smoke.sh`: deploy smoke against `TASTE_SMOKE_BASE_URL`
 
 ## AC-01: Idempotent import
 
@@ -42,9 +42,9 @@ Test paths are proposals; the owning task creates them.
 
 ## AC-08: Dual-host deploy
 
-- [ ] **Given** image tag T **When** it is deployed via Coolify compose **Then** `scripts/smoke.sh` passes against the Coolify URL (OPS-01 · smoke · local-attested-coolify · `scripts/smoke.sh`)
-- [ ] **Given** the same tag T **When** it is deployed via `azd up` **Then** `scripts/smoke.sh` passes against the ACA URL (OPS-02 · smoke · local-attested-azure · `scripts/smoke.sh`)
-- [ ] **Given** `compose.yaml` **When** it runs under plain `docker compose up` in CI **Then** smoke passes (T-SCAFFOLD · smoke · cloud-linux · `.github/workflows/taste-engine.yml`)
+- [ ] **Given** image tag T **When** it is deployed via Coolify compose **Then** `scripts/smoke.sh` passes against the Coolify URL (OPS-02 · smoke · local-attested-coolify · `scripts/smoke.sh`)
+- [ ] **Given** the same tag T **When** it is deployed via `azd up` **Then** `scripts/smoke.sh` passes against the ACA URL (OPS-03 · smoke · local-attested-azure · `scripts/smoke.sh`)
+- [ ] **Given** `compose.yaml` **When** it runs under plain `docker compose up` in CI **Then** smoke passes (OPS-01 · smoke · cloud-linux · `.github/workflows/taste-engine.yml`)
 
 ## AC-09: Planner correctness
 
