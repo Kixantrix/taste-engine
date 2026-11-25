@@ -1,42 +1,83 @@
-# taste-engine
+# Kerrigan (Enterprise Template)
 
-A local-first, portable **taste engine** for a household's film and TV viewing.
+This is the **enterprise template** of Kerrigan - a repo template for defining and evolving a **swarm of agents** that completes software projects the way *you* want them completed—without you having to be "the glue".
 
-It learns what each viewer enjoys (including spoken, nuanced reactions), ranks titles across the whole catalog independently of which services you currently pay for, and proposes when to activate or pause subscriptions. Playback is always handed off to the legitimate provider's app or website — this project never streams, proxies, or circumvents DRM.
+This template includes:
+- ✅ Core framework specs (constitution, agent archetypes, contracts)
+- ✅ Agent prompts (`.github/agents/`)
+- ✅ CI/CD workflows (`.github/workflows/`)
+- ✅ Complete tooling (validators, scripts, automation)
+- ✅ Comprehensive documentation
+- ✅ All playbooks
+- ✅ **All 9+ example projects**
 
-> **Status:** M0 discovery. Nothing is built yet. The full brief lives in [`docs/dossier.md`](docs/dossier.md).
+This template **excludes** only:
+- ❌ Investigation artifacts and milestone documents
+- ❌ Agent feedback history (development iterations)
+- ❌ Meta-project specs about Kerrigan itself
 
-## Principles
+**Need less?** See [TEMPLATE-BRANCHES.md](TEMPLATE-BRANCHES.md) for simpler templates.
 
-- **You own your profile:** exportable history, feedback, inferred preferences and settings.
-- **Local-first, not local-only:** local storage and inference by default; cloud model services are explicit opt-in.
-- **Taste before availability:** predict enjoyment for any title, then filter to what's playable now.
-- **Voice is a primary input:** push-to-talk reactions, never an always-on microphone.
-- **Upstream-first:** integrate with and contribute to existing projects (Streamline, Sofa, PenguWatch, MultiStream, …) before forking or rebuilding.
-- **Prove it:** every model must beat simple baselines on a reproducible benchmark.
+---
 
-## Non-goals
+## 🚀 Quick Start
 
-Streaming server, DRM circumvention, automatic purchases or cancellations, always-on microphone, universal provider authentication, training a foundation model, or a commercial multi-tenant service at launch.
+1. **Explore examples**: 9+ complete examples in `examples/`
+2. **Create GitHub labels**: `agent:go`, `agent:sprint`, `autonomy:override`, `allow:large-file`, plus role labels
+3. **Create an issue** with your project idea and add the `agent:go` label
+4. **Add role label** to assign work (e.g., `role:swe`)
+5. **Copy agent prompts** from `.github/agents/` to your AI assistant
+6. **Let agents build**: Spec → Architecture → Implementation → Testing
 
-## Roadmap
+📖 **Full setup guide**: [docs/onboarding/setup.md](docs/onboarding/setup.md)
 
-| Milestone | Deliverable |
-|---|---|
-| M0 discovery | Upstream repo audit, license review, availability-data and device-handoff spikes → fork-or-integrate decision |
-| M1 evidence | Importers, canonical IDs, portable append-only event store, viewer isolation |
-| M2 taste baseline | Content genome, embeddings, ranking, explainable recommendations |
-| M3 voice | Push-to-talk, local transcription, evidence extraction, undo |
-| M4 rotation | Availability adapter, manual subscriptions, viewing/subscription planner |
-| M5 living room | TV integration or native client, QR pairing |
-| M6 ecosystem | Documented API/SDK, upstream PRs, packaging |
+---
 
-Work is tracked as [GitHub issues](../../issues); see the dossier §10 for the initial backlog.
+## 📐 Architecture
 
-## How this repo is developed
+```
+Issue → [Control Plane] → Spec Agent → Architect → SWE → Testing → Deploy
+         ↑ Labels              ↓ Artifacts
+         ↑ status.json         ↓ Validated by CI
+```
 
-This repository is built with the [Kerrigan](https://github.com/Kixantrix/kerrigan) agent harness on top of [GitHub Spec Kit](https://github.com/github/spec-kit). Agents start at [`AGENTS.md`](AGENTS.md). Harness files (`.github/agents`, `.github/skills`, `tools/`, `playbooks/`, `specs/kerrigan*`) are upstream Kerrigan and are refreshed with `tools/upgrade-kerrigan.ps1`.
+See [docs/architecture/architecture.md](docs/architecture/architecture.md) for complete workflow details.
 
-## License
+---
 
-[Apache-2.0](LICENSE). Third-party code, models and data (catalog metadata, MovieLens, provider availability) carry their own terms and are reviewed separately before use.
+## 📚 Documentation
+
+Comprehensive documentation for all aspects:
+
+### Getting Started
+- [Setup Guide](docs/onboarding/setup.md)
+- [CLI Reference](docs/operations/cli-reference.md)
+- [Agent Assignment](docs/agent-assignment.md)
+- [FAQ](docs/onboarding/FAQ.md)
+
+### Process & Workflow
+- [Kickoff Playbook](playbooks/kickoff.md)
+- [Project Lifecycle](playbooks/project-lifecycle.md)
+- [Autonomy Modes](playbooks/autonomy-modes.md)
+
+### Specifications
+- [Constitution](specs/constitution.md)
+- [Artifact Contracts](specs/kerrigan/020-artifact-contracts.md)
+- [Quality Bar](specs/kerrigan/030-quality-bar.md)
+
+---
+
+## 📋 Templates
+
+- **🎯 [template/minimal](../../tree/template/minimal)** - Quick start
+- **📚 [template/with-examples](../../tree/template/with-examples)** - With curated examples
+- **🏢 template/enterprise** (this branch) - Full-featured
+- **🔬 [main](../../tree/main)** - Complete reference
+
+See [TEMPLATE-BRANCHES.md](TEMPLATE-BRANCHES.md) for details.
+
+---
+
+## 📄 License
+
+MIT License - See [LICENSE](LICENSE) for details.
