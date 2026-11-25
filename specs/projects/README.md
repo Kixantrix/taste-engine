@@ -20,6 +20,7 @@ Projects currently maintained and referenced in documentation.
 |---------|---------|--------|--------------|
 | [kerrigan](kerrigan/) | Meta-project for Kerrigan itself — building the agent swarm system | Active | 2026-01-15 |
 | [docs-reorganization](docs-reorganization/) | Reorganize the `docs/` directory into a hierarchical structure | Active | 2026-05-12 |
+| [taste-engine](taste-engine/) | Browser MVP of the household taste engine; deploys to Coolify and Azure | Active | 2026-11-24 |
 
 ---
 
