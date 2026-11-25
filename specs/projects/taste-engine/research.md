@@ -71,6 +71,24 @@ history. DISC-01 must confirm all of this at pinned commits.
 - (b) Use TMDB only for display, and derive ranking features from openly licensed sources: Wikidata (CC0), MovieLens Tag Genome (research license, so check its terms), user-generated evidence, and the vendor's genre fields.
 - (c) Use a commercial metadata vendor.
 
+### Metadata alternatives to TMDB (for ML features)
+
+| Source | License / terms | Coverage | Use for |
+|---|---|---|---|
+| [Wikidata](https://www.wikidata.org/wiki/Wikidata:Licensing) | **CC0** structured data. Any use, no attribution needed. | Films and series. Genres, cast/crew, country, year, awards, based-on, IMDb/TMDB/Netflix IDs | Core ID crosswalk and structured features. Safest ML base. |
+| Wikipedia plot/reception text | CC BY-SA 4.0. Attribute it; derived numeric features are very likely fine *(confirm)*. | Most notable titles | LLM-derived genome attributes (tone, pacing, themes). |
+| [TVmaze API](https://www.tvmaze.com/api) | **CC BY-SA 4.0** data. Any use with credit and link. | TV only. Strong episode/season/schedule data and US network/web-channel info. | TV structure, episode cadence, season-readiness for the planner. |
+| IMDb non-commercial datasets | Personal and non-commercial use only. No redistribution. *(ML terms unverified)* | Very broad. Ratings and vote counts, basic genres. | Popularity and quality priors (Baseline A), if the terms allow. |
+| MovieLens 32M / Tag Genome | Research, non-commercial, no redistribution without permission | Movies, ≤2023 | Offline evaluation and attribute-vocabulary research only. Don't ship it. |
+| Availability vendor payloads (MotN / Watchmode) | Per vendor contract *(check ML/cache clauses in DISC-02)* | Titles they track | Genres, overview and ratings bundled with availability. |
+| User evidence | Ours | Household | Strongest personal signal (reactions, ratings, imports). |
+| Commercial vendors (Gracenote, TheTVDB licensed) | Paid | Comprehensive | Only if D2 changes to commercial. |
+
+**Proposed split if D1 is restrictive:**
+- TMDB (or Wikidata/TVmaze) provides **display** data: posters, overview and search.
+- **Ranking features** come only from Wikidata, TVmaze, Wikipedia-derived attributes and user evidence.
+- The `genome` module records the source of every feature. Swapping a source should not require re-collecting user evidence.
+
 ## Import (RQ-6)
 
 - **Netflix**
