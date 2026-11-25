@@ -53,7 +53,7 @@ jobs:
               repo / ".github" / "workflows" / "dashboard-build.yml",
           }
 
-          redirection_re = re.compile(r"gh\s+auth\s+token\s*(?:\d?>|>>|2>>|&>)")
+          redirection_re = re.compile(r"gh\s+auth\s+token\s*(?!2>\s*(?:\$null|/dev/null)\b)(?:\d?>|>>|2>>|&>)")
           logging_re = re.compile(r"(echo|printf|Write-Output|Write-Host).*?(?:\$\(\s*gh\s+auth\s+token\s*\)|`gh auth token`)")
           pipe_re = re.compile(r"gh\s+auth\s+token\s*\|\s*([^\s|]+)")
 
